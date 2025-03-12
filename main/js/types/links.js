@@ -1,4 +1,5 @@
-import { drawBezierLink, drawStraightLink } from "../lib/graphic-primitives.js";
+import { getApp, getContainer } from "../draw/app.js";
+import { drawBezierLink } from "../draw/link.js";
 
 const colors = {
   "parents": "#AA0000",
@@ -9,6 +10,7 @@ const colors = {
   "particles": "#AA00AA",
   "mcclusters": "#D8F1A0",
   "mctracks": "#fe5e41",
+  "vertex": "#593746",
 };
 
 export class Link {
@@ -19,11 +21,11 @@ export class Link {
     this.xShift = 0;
   }
 
-  draw(ctx) {
-    drawBezierLink(ctx, this);
+  draw() {
+    drawBezierLink(this);
   }
 
-  isVisible(x, y, width, height) {
+  isVisible() {
     const boxFrom = this.from;
     const boxTo = this.to;
 
@@ -37,12 +39,13 @@ export class Link {
     const boxY = Math.min(fromY, toY);
     const boxHeight = Math.abs(fromY - toY);
 
-    /*
-    console.log("boxX: ", this.boxX);
-    console.log("boxY: ", this.boxY);
-    console.log("boxWidth: ", this.boxWidth);
-    console.log("boxHeight: ", this.boxHeight);
-    */
+    const app = getApp();
+    const container = getContainer();
+
+    const x = Math.abs(container.x);
+    const y = Math.abs(container.y);
+    const width = app.renderer.width;
+    const height = app.renderer.height;
 
     return (
       x + width > boxX &&
@@ -55,11 +58,13 @@ export class Link {
 
 class ParentLink extends Link {
   constructor(from, to) {
-    super(to, from);
+    super(from, to);
     this.color = colors["parents"];
     this.xShift = 3;
-    // parent is this.from
-    // current object is this.to
+  }
+
+  draw() {
+    drawBezierLink(this, true);
   }
 }
 
@@ -68,8 +73,6 @@ class DaughterLink extends Link {
     super(from, to);
     this.color = colors["daughters"];
     this.xShift = -3;
-    // current object is this.from
-    // daughter is this.to
   }
 }
 
@@ -80,9 +83,9 @@ class MCRecoParticleAssociation extends Link {
     this.weight = weight;
   }
 
-  draw(ctx) {
-    drawStraightLink(ctx, this);
-  }
+  // draw(ctx) {
+  //   drawStraightLink(ctx, this);
+  // }
 }
 
 class Particles extends Link {
@@ -106,6 +109,13 @@ class Tracks extends Link {
   }
 }
 
+class Vertex extends Link {
+  constructor(from, to) {
+    super(from, to);
+    this.color = colors["vertex"];
+  }
+}
+
 class MCRecoTrackParticleAssociation extends Link {
   constructor(from, to, weight) {
     super(from, to);
@@ -113,9 +123,9 @@ class MCRecoTrackParticleAssociation extends Link {
     this.weight = weight;
   }
 
-  draw(ctx) {
-    drawStraightLink(ctx, this);
-  }
+  // draw(ctx) {
+  //   drawStraightLink(ctx, this);
+  // }
 }
 
 class MCRecoClusterParticleAssociation extends Link {
@@ -125,9 +135,9 @@ class MCRecoClusterParticleAssociation extends Link {
     this.weight = weight;
   }
 
-  draw(ctx) {
-    drawStraightLink(ctx, this);
-  }
+  // draw(ctx) {
+  //   drawStraightLink(ctx, this);
+  // }
 }
 
 export const linkTypes = {
@@ -139,5 +149,7 @@ export const linkTypes = {
   "clusters": Clusters,
   "tracks": Tracks,
   "particles": Particles,
-  "startVertex": Link,
+  "particle": Particles,
+  "startVertex": Vertex,
+  "associatedParticle": Vertex,
 };
